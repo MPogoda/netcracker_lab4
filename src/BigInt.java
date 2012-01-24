@@ -80,6 +80,12 @@ public class BigInt implements Comparable<BigInt> {
         }
     }
 
+    public BigInt(BigInt other) {
+        this.negative = other.negative;
+        this.chain = new int[other.chain.length];
+        System.arraycopy(other.chain, 0, this.chain, 0, other.chain.length);
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(4 * chain.length + (negative ? 1 : 0));
@@ -102,8 +108,12 @@ public class BigInt implements Comparable<BigInt> {
             } else if (carry == 0) {
                 break;
             }
-            carry = (chain[i] > 9999) ? 1 : 0;
-            chain[i] %= 10000;
+            if (chain[i] > 9999) {
+                carry = 1;
+                chain[i] -= 10000;
+            } else {
+                carry = 0;
+            }
         }
 
         if (carry != 0) {
@@ -129,6 +139,8 @@ public class BigInt implements Comparable<BigInt> {
             if (chain[i] < 0) {
                 carry = 1;
                 chain[i] += 10000;
+            } else {
+                carry = 0;
             }
         }
 
@@ -151,28 +163,31 @@ public class BigInt implements Comparable<BigInt> {
 
         if (negative == other.negative) {
             boolean comp = this.compareTo(other) > 0;
-            if ((comp && negative) || !(comp || negative)) {
+            if (comp == negative) {
                 n2 = this;
                 n1 = other;
             }
-            return n1.internalPlus(n2);
+            return (new BigInt(n1)).internalPlus(n2);
         }
 
         negative = !negative;
         boolean comp = (this.compareTo(other) > 0);
         negative = !negative;
 
-        if ((comp || negative) && !(comp && negative)) {
+        if (comp != negative) {
             n2 = this;
             n1 = other;
         }
 
-        return n1.internalMinus(n2);
+        return (new BigInt(n1)).internalMinus(n2);
     }
 
     public BigInt minus(BigInt other) {
         other.negative = !other.negative;
-        return this.plus(other);
+        BigInt result = this.plus(other);
+        other.negative = !other.negative;
+
+        return result;
     }
 
     /**
@@ -241,4 +256,5 @@ public class BigInt implements Comparable<BigInt> {
 
         return 0;
     }
+
 }
