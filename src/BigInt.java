@@ -22,6 +22,8 @@
 
 package com.netcracker.lab4;
 
+import java.util.Arrays;
+
 /**
  * Created by IntelliJ IDEA.
  * User: mpogoda
@@ -78,6 +80,11 @@ public class BigInt implements Comparable<BigInt> {
         for (int i = 0; i < chain.length; ++i) {
             chain[chain.length - i - 1] = new Integer(number.substring(4 * i, 4 * (i + 1)));
         }
+    }
+
+    public BigInt(int length) {
+        this.chain = new int[length];
+        this.negative = false;
     }
 
     @Override
@@ -173,6 +180,41 @@ public class BigInt implements Comparable<BigInt> {
     public BigInt minus(BigInt other) {
         other.negative = !other.negative;
         return this.plus(other);
+    }
+
+    BigInt internalMultiply(int other, int shift) {
+        BigInt result = new BigInt(chain.length);
+        int carry = 0;
+        for (int i = 0; i < result.chain.length; ++i) {
+            result.chain[i] = this.chain[i] * other + carry;
+            if (result.chain[i] > 9999) {
+                carry = result.chain[i] / 10000;
+                result.chain[i] %= 10000;
+            } else {
+                carry = 0;
+            }
+        }
+
+        if (carry != 0) {
+            ++shift;
+        }
+
+        if (shift != 0) {
+            int[] newChain = new int[result.chain.length + shift];
+            Arrays.fill(newChain, 0, shift, 0);
+            System.arraycopy(result.chain, 0, newChain, shift, result.chain.length);
+            if (carry != 0) {
+                newChain[newChain.length - 1] = carry;
+            }
+            result.chain = newChain;
+        }
+
+        return result;
+    }
+
+    BigInt internalMultiply(BigInt other) {
+
+        return null;
     }
 
     /**
