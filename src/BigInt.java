@@ -201,6 +201,7 @@ public class BigInt implements Comparable<BigInt> {
     BigInt internalMultiply(int other, int shift) {
         BigInt result = new BigInt(chain.length);
         int carry = 0;
+
         for (int i = 0; i < result.chain.length; ++i) {
             result.chain[i] = this.chain[i] * other + carry;
             if (result.chain[i] > 9999) {
@@ -211,12 +212,8 @@ public class BigInt implements Comparable<BigInt> {
             }
         }
 
-        if (carry != 0) {
-            ++shift;
-        }
-
-        if (shift != 0) {
-            int[] newChain = new int[result.chain.length + shift];
+        if ((shift != 0) || (carry != 0)) {
+            int[] newChain = new int[result.chain.length + shift + (carry == 0 ? 0 : 1)];
             Arrays.fill(newChain, 0, shift, 0);
             System.arraycopy(result.chain, 0, newChain, shift, result.chain.length);
             if (carry != 0) {
@@ -229,8 +226,41 @@ public class BigInt implements Comparable<BigInt> {
     }
 
     BigInt internalMultiply(BigInt other) {
+        BigInt result = new BigInt(this.chain.length + 1);
 
-        return null;
+        for (int i = 0; i < other.chain.length; ++i) {
+            result = result.internalPlus(this.internalMultiply(other.chain[i], i));
+        }
+        return result;
+    }
+
+    BigInt multiply(BigInt other) {
+        System.out.println('.');
+        boolean negative = (this.negative != other.negative);
+        BigInt result = (this.chain.length >= other.chain.length) ? this.internalMultiply(other) :
+                        other.internalMultiply(this);
+        result.negative = negative;
+
+        return result;
+    }
+
+    BigInt power(int other) {
+        assert (other >= 0);
+        if (other == 0) {
+            return new BigInt("1");
+        } else if (other == 1) {
+            return new BigInt(this);
+        } else if (other == 2) {
+            return this.multiply(this);
+        }
+
+        BigInt tmp = this.power(other / 2);
+        tmp = tmp.multiply(tmp);
+        if (other % 2 == 1) {
+            tmp = tmp.multiply(this);
+        }
+
+        return tmp;
     }
 
     /**
